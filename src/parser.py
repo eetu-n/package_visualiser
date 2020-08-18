@@ -1,10 +1,16 @@
 import re
-import json
+
+"""
+General structure:
+    Lists in file, e.g. 'Depends' or 'Conffiles' are split into python lists
+    Tuples, e.g. packages with version numbers, maintainer names + emails, are split into tuples
+"""
 
 class pkg_status:
     pass
 
-def read_pkg_status(file_name: str):
+def read_pkg_status(file_name: str = "/var/lib/dpkg/status"):
+    """Read and parse dpkg status files into standard Python data structures"""
     f = open(file_name, "r")
     file = f.read()
     f.close()
@@ -37,10 +43,47 @@ def read_pkg_status(file_name: str):
 
     return package_list
 
+def parse_package_list(lst: str):
+    """Parse package lists (e.g. in 'Depends') list of dicts
+    
+    Structure:
+        [
+            {
+                Package: name,
+                [Version: number and sign]
+            },
+            ...
+        ]
+    """
+    value_list = []
+
+    for package in lst.split(", "):
+        package = re.sub("[()]", "", package)
+        split_package = package.split(" ", 1)
+
+        package_dict = {"Package": split_package[0]}
+
+        if len(split_package) > 1:
+            package_dict.update({"Version": split_package[1]})
+
+        value_list.append(package_dict)
+
+    return value_list
+
+
+def parse_maintainer(value: str):
+    """Parse maintainer value (in 'Maintainer' and 'Original-Maintainer') into dict"""
+    split_value = value[:-1].split(" <", 1)
+    return { "Name": split_value[0], "Email": split_value[1]}
+
+
 def parse_key_val_pair(line: str):
-    pair    = re.split(":[\n ]", line, 1)
+    """Parse each key:value pair in dpkg status file into standard python dict"""
+    pair = re.split(":[\n ]", line, 1)
     if len(pair) <= 1:
+        #TODO: Raise exception
         return line
+
     key     = pair[0]
     value   = pair[1]
 
@@ -60,8 +103,7 @@ def parse_key_val_pair(line: str):
         pass
 
     elif key == "Maintainer":
-        # Transform into (name, email) tuple
-        value = tuple(value[:-1].split(" <", 1))
+        value = parse_maintainer(value)
 
     elif key == "Architecture":
         pass
@@ -73,19 +115,19 @@ def parse_key_val_pair(line: str):
         pass
 
     elif key == "Replaces":
-        value = value.split(", ")
+        value = parse_package_list(value)
 
     elif key == "Provides":
-        value = value.split(", ")
+        value = parse_package_list(value)
 
     elif key == "Depends":
-        value = value.split(", ")
+        value = parse_package_list(value)
 
     elif key == "Suggests":
-        value = value.split(", ")
+        value = parse_package_list(value)
 
     elif key == "Conflicts":
-        value = value.split(", ")
+        value = parse_package_list(value)
 
     elif key == "Conffiles":
         # Split lines to list with each line being tuple object
@@ -102,8 +144,7 @@ def parse_key_val_pair(line: str):
         value = value.replace("\n ", "\n")
 
     elif key == "Original-Maintainer":
-        # Transform into (name, email) tuple
-        value = tuple(value[:-1].split(" <", 1))
+        value = parse_maintainer(value)
 
     elif key == "Homepage":
         pass
