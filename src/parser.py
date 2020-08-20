@@ -6,10 +6,62 @@ General structure:
     Tuples, e.g. packages with version numbers, maintainer names + emails, are split into tuples
 """
 
-class pkg_status:
-    pass
+class dpkg_status:
+    def __init__(self, file_name: str = "/var/lib/dpkg/status"):
+        self.update_dpkg_status(file_name)
 
-def read_pkg_status(file_name: str = "/var/lib/dpkg/status"):
+    def get_dpkg_status(self):
+        return self.data
+    
+    def update_dpkg_status(self, file_name: str = "/var/lib/dpkg/status"):
+        self.data = read_dpkg_status(file_name)
+        self.data = update_dependency_lists(self.data)
+
+    def get_package_list(self):
+        package_list = []
+        
+        for package in self.data:
+            package_list.append(package["Name"])
+        
+        return package_list
+
+    def get_package(self, name: str):
+        package = [item for item in self.data if item["Name"] == name]
+
+        if package == [None] or package == []:
+            #TODO: Throw exception
+            return None
+        else:
+            package = package[0]
+
+        keys_to_keep = ["Name", "Depends", "RDepends"]
+
+        pruned_package = package.copy()
+
+        for key in package.keys():
+            if key not in keys_to_keep:
+                pruned_package.pop(key)
+        
+        return pruned_package
+
+
+def update_dependency_lists(data):
+    updated_data = data
+
+    for package in data:
+        for dependency in package.get("Depends"):
+            updated_item = [item["RDepends"].append({"Name": package["Name"]}) for item in updated_data if item["Name"] == dependency["Name"]]
+            if updated_item == [None] or updated_item == []:
+                continue
+
+            updated_data = [item for item in updated_data if item["Name"] != dependency["Name"]]
+            updated_data.append(updated_item)
+
+    return updated_data
+
+
+
+def read_dpkg_status(file_name: str = "/var/lib/dpkg/status"):
     """Read and parse dpkg status files into standard Python data structures"""
     f = open(file_name, "r")
     file = f.read()
@@ -20,6 +72,9 @@ def read_pkg_status(file_name: str = "/var/lib/dpkg/status"):
     package_list = []
 
     for package in file:
+        if len(package) == 0:
+            continue
+
         package = package.split("\n")
         split_package = []
 
@@ -39,29 +94,24 @@ def read_pkg_status(file_name: str = "/var/lib/dpkg/status"):
         for line in split_package:
             package_dict.update(parse_key_val_pair(line))
 
+        package_dict["RDepends"] = []
+
+        if "Depends" not in package_dict:
+            package_dict["Depends"] = []
+
         package_list.append(package_dict)
 
     return package_list
 
 def parse_package_list(lst: str):
-    """Parse package lists (e.g. in 'Depends') list of dicts
-    
-    Structure:
-        [
-            {
-                Package: name,
-                [Version: number and sign]
-            },
-            ...
-        ]
-    """
+    """Parse package lists (e.g. in 'Depends') list of dicts"""
     value_list = []
 
     for package in lst.split(", "):
         package = re.sub("[()]", "", package)
         split_package = package.split(" ", 1)
 
-        package_dict = {"Package": split_package[0]}
+        package_dict = {"Name": split_package[0]}
 
         if len(split_package) > 1:
             package_dict.update({"Version": split_package[1]})
@@ -88,7 +138,7 @@ def parse_key_val_pair(line: str):
     value   = pair[1]
 
     if key == "Package":
-        pass
+        key = "Name"
 
     elif key == "Status":
         pass
