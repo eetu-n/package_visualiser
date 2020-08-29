@@ -6,7 +6,7 @@ ENV PROJECT_DIR /srv/package_visualizer_backend
 
 WORKDIR ${PROJECT_DIR}
 
-COPY Pipfile Pipfile.lock ${PROJECT_DIR}/
+COPY resources src Pipfile Pipfile.lock ${PROJECT_DIR}/
 
 RUN pipenv install --system --deploy
 
