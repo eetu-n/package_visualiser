@@ -9,6 +9,7 @@ verify_ssl = true
 pytest = "*"
 fastapi = "*"
 pylint = "*"
+uvicorn = "*"
 
 [requires]
-python_version = "3.8"
+python_version = "3.7"
