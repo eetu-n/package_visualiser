@@ -1,5 +1,5 @@
 {
-    "python.pythonPath": "/home/eetu/.local/share/virtualenvs/package_visualiser-sGYfyvNO/bin/python",
+    "python.pythonPath": "/home/eetu/.local/share/virtualenvs/backend-DJfyU_iH/bin/python",
     "python.linting.pylintEnabled": true,
     "python.linting.enabled": true,
     "python.testing.pytestArgs": [
