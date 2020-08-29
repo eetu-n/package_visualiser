@@ -5,10 +5,6 @@ app = FastAPI()
 
 status = dpkg_status("resources/status.dummy")
 
-@app.get("/")
-async def root():
-    return {"message": "Hello World"}
-
 @app.get("/package_list")
 async def package_list():
     return status.get_package_list()
