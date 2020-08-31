@@ -21,7 +21,7 @@ class dpkg_status:
         package_list = []
         
         for package in self.data:
-            package_list.append(package["Name"])
+            package_list.append({"Name": package["Name"]})
         
         return package_list
 
@@ -34,15 +34,16 @@ class dpkg_status:
         else:
             package = package[0]
 
-        keys_to_keep = ["Name", "Depends", "RDepends"]
+        return prune_dict(package, ["Name", "Depends", "RDepends"])
 
-        pruned_package = package.copy()
+def prune_dict(dict_to_prune: dict, keys_to_keep: [str]):
+    pruned_dict = dict_to_prune.copy()
 
-        for key in package.keys():
-            if key not in keys_to_keep:
-                pruned_package.pop(key)
-        
-        return pruned_package
+    for key in dict_to_prune.keys():
+        if key not in keys_to_keep:
+            pruned_dict.pop(key)
+    
+    return pruned_dict
 
 
 def update_dependency_lists(data):

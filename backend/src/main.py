@@ -9,6 +9,6 @@ status = dpkg_status("resources/status.dummy")
 async def package_list():
     return status.get_package_list()
 
-@app.get("/packages/{package}")
+@app.get("/package/{package}")
 async def package(package: str):
     return status.get_package(package)
