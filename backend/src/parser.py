@@ -114,8 +114,9 @@ def parse_package_list(lst: str):
 
         package_dict = {"Name": split_package[0]}
 
-        if len(split_package) > 1:
-            package_dict.update({"Version": split_package[1]})
+        # Uncomment to enable version parsing
+        #if len(split_package) > 1:
+        #    package_dict.update({"Version": split_package[1]})
 
         value_list.append(package_dict)
 
