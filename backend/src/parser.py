@@ -21,12 +21,12 @@ class dpkg_status:
         package_list = []
         
         for package in self.data:
-            package_list.append({"Name": package["Name"]})
+            package_list.append({"name": package["name"]})
         
         return package_list
 
     def get_package(self, name: str):
-        package = [item for item in self.data if item["Name"] == name]
+        package = [item for item in self.data if item["name"] == name]
 
         if package == [None] or package == []:
             #TODO: Throw exception
@@ -34,7 +34,7 @@ class dpkg_status:
         else:
             package = package[0]
 
-        return prune_dict(package, ["Name", "Depends", "RDepends"])
+        return prune_dict(package, ["name", "depends", "rdepends"])
 
 def prune_dict(dict_to_prune: dict, keys_to_keep: [str]):
     pruned_dict = dict_to_prune.copy()
@@ -50,12 +50,12 @@ def update_dependency_lists(data):
     updated_data = data
 
     for package in data:
-        for dependency in package.get("Depends"):
-            updated_item = [item["RDepends"].append({"Name": package["Name"]}) for item in updated_data if item["Name"] == dependency["Name"]]
+        for dependency in package.get("depends"):
+            updated_item = [item["rdepends"].append({"name": package["name"]}) for item in updated_data if item["name"] == dependency["name"]]
             if updated_item == [None] or updated_item == []:
                 continue
 
-            updated_data = [item for item in updated_data if item["Name"] != dependency["Name"]]
+            updated_data = [item for item in updated_data if item["name"] != dependency["name"]]
             updated_data.append(updated_item)
 
     return updated_data
@@ -95,10 +95,10 @@ def read_dpkg_status(file_name: str = "/var/lib/dpkg/status"):
         for line in split_package:
             package_dict.update(parse_key_val_pair(line))
 
-        package_dict["RDepends"] = []
+        package_dict["rdepends"] = []
 
-        if "Depends" not in package_dict:
-            package_dict["Depends"] = []
+        if "depends" not in package_dict:
+            package_dict["depends"] = []
 
         package_list.append(package_dict)
 
@@ -112,7 +112,7 @@ def parse_package_list(lst: str):
         package = re.sub("[()]", "", package)
         split_package = package.split(" ", 1)
 
-        package_dict = {"Name": split_package[0]}
+        package_dict = {"name": split_package[0]}
 
         # Uncomment to enable version parsing
         #if len(split_package) > 1:
@@ -126,7 +126,7 @@ def parse_package_list(lst: str):
 def parse_maintainer(value: str):
     """Parse maintainer value (in 'Maintainer' and 'Original-Maintainer') into dict"""
     split_value = value[:-1].split(" <", 1)
-    return { "Name": split_value[0], "Email": split_value[1]}
+    return { "name": split_value[0], "email": split_value[1]}
 
 
 def parse_key_val_pair(line: str):
@@ -136,52 +136,52 @@ def parse_key_val_pair(line: str):
         #TODO: Raise exception
         return line
 
-    key     = pair[0]
+    key     = pair[0].lower()
     value   = pair[1]
 
-    if key == "Package":
-        key = "Name"
+    if key == "package":
+        key = "name"
 
-    elif key == "Status":
+    elif key == "status":
         pass
 
-    elif key == "Priority":
+    elif key == "priority":
         pass
 
-    elif key == "Section":
+    elif key == "section":
         pass
 
-    elif key == "Installed-Size":
+    elif key == "installed-size":
         pass
 
-    elif key == "Maintainer":
+    elif key == "maintainer":
         value = parse_maintainer(value)
 
-    elif key == "Architecture":
+    elif key == "architecture":
         pass
 
-    elif key == "Source":
+    elif key == "source":
         pass
 
-    elif key == "Version":
+    elif key == "version":
         pass
 
-    elif key == "Replaces":
+    elif key == "replaces":
         value = parse_package_list(value)
 
-    elif key == "Provides":
+    elif key == "provides":
         value = parse_package_list(value)
 
-    elif key == "Depends":
+    elif key == "depends":
         value = parse_package_list(value)
 
-    elif key == "Suggests":
+    elif key == "suggests":
         value = parse_package_list(value)
 
-    elif key == "Conflicts":
+    elif key == "conflicts":
         value = parse_package_list(value)
 
-    elif key == "Conffiles":
+    elif key == "conffiles":
         # Split lines to list with each line being tuple object
         value = value.replace("\n ", "\n")
         value = value.split("\n")
@@ -195,13 +195,13 @@ def parse_key_val_pair(line: str):
         # Remove space from beginnings of lines
         value = value.replace("\n ", "\n")
 
-    elif key == "Original-Maintainer":
+    elif key == "original-maintainer":
         value = parse_maintainer(value)
 
-    elif key == "Homepage":
+    elif key == "homepage":
         pass
 
-    elif key == "Python-Version":
+    elif key == "python-version":
         value = value.split(", ")
 
     else:
