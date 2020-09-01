@@ -1,0 +1,12 @@
+
+html{
+    margin: 1% 5% 1%;
+    background-color: ;
+    color: #223548;
+}
+
+@media (max-width: 978px){
+    html{
+        margin:0;
+    }
+}
