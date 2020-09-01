@@ -23,7 +23,7 @@ class dpkg_status:
         for package in self.data:
             package_list.append({"name": package["name"]})
         
-        return package_list
+        return sorted(package_list, key=get_name)
 
     def get_package(self, name: str):
         package = [item for item in self.data if item["name"] == name]
@@ -34,7 +34,10 @@ class dpkg_status:
         else:
             package = package[0]
 
-        return prune_dict(package, ["name", "depends", "rdepends"])
+        return prune_dict(package, ["name", "description", "depends", "rdepends"])
+
+def get_name(package):
+    return package["name"]
 
 def prune_dict(dict_to_prune: dict, keys_to_keep: [str]):
     pruned_dict = dict_to_prune.copy()
