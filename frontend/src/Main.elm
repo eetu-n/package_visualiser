@@ -1,12 +1,13 @@
 module Main exposing (main)
 
 import Browser
-import Html exposing (Html, div, text, ul, li, span, h5, h4)
-import Html.Attributes exposing (id, class)
+import Html exposing (Html, div, text, ul, li, span, h4, h3, h1, p)
+import Html.Attributes exposing (id, class, style)
 import Html.Events exposing (onClick)
 import Http
-import Json.Decode exposing (Decoder, field, string, list, map, map3)
+import Json.Decode exposing (Decoder, field, string, list, map, map4)
 import ScrollTo
+import String exposing (split)
 
 main : Program () Model Msg
 main =
@@ -102,6 +103,7 @@ type alias SinglePackage =
     { name: String
     , depends: List MultiPackage
     , rdepends: List MultiPackage
+    , description: String
     }
 
 listItem : Model -> MultiPackage -> Html Msg
@@ -125,7 +127,7 @@ collapsedPackage pkg =
         , class "package"
         , onClick  (ExpandPackage pkg.name)
         ] 
-        [ h4 [] 
+        [ h3 [] 
             [ text pkg.name 
             , span 
                 [ onClick (ExpandPackage pkg.name)
@@ -141,7 +143,7 @@ expandedPackage pkg =
         [ id pkg.name
         , class "package"
         ] 
-        [ h4
+        [ h3
             []
             [ text pkg.name
             , span
@@ -150,16 +152,28 @@ expandedPackage pkg =
                 ]
                 [text "expand_less"]
             ]
+        , decodeDescription pkg.description
         , div[]
-            [ h5[][text "Depends:"]
+            [ h4[][text "Depends:"]
             , ul[](List.map subListItem pkg.depends)
             ]
 
         , div[]
-            [ h5[][text "RDepends:"]
+            [ h4[][text "RDepends:"]
             , ul[] (List.map subListItem pkg.rdepends)
             ]
         ]
+
+decodeDescription : String -> Html Msg
+decodeDescription desc =
+    div [ class "description"]
+        [ h4[][text "Description"]
+        , div[] (List.map descriptionLine (split "\n" desc))
+        ]
+
+descriptionLine : String -> Html Msg
+descriptionLine line =
+    p [style "margin-top" "0", style "margin-bottom" "0"][text line]
 
 subListItem : MultiPackage -> Html Msg
 subListItem pkg =
@@ -191,14 +205,16 @@ multiPackageDecoder =
 
 singlePackageDecoder : Decoder SinglePackage
 singlePackageDecoder =
-    map3 SinglePackage
+    map4 SinglePackage
         (field "name" string)
         (field "depends" multiPackageDecoder)
         (field "rdepends" multiPackageDecoder)
+        (field "description" string)
 
 view : Model -> Html Msg
 view model =
     div []
-        [ ul []
+        [ h1[][text "Package Visualizer"]
+        , ul []
             (List.map (listItem model) model.package_list)
         ]
