@@ -1,7 +1,7 @@
 module Main exposing (main)
 
 import Browser
-import Html exposing (Html, div, text, ul, li, span, h4, h3, h1, p)
+import Html exposing (Html, div, text, ul, li, span, h5, h4, h3, h1, p, b)
 import Html.Attributes exposing (id, class, style)
 import Html.Events exposing (onClick)
 import Http
@@ -152,7 +152,10 @@ expandedPackage pkg =
                 ]
                 [text "expand_less"]
             ]
-        , decodeDescription pkg.description
+        , div [ class "description"]
+            [ h4[][text "Description"]
+            , div[] (decodeDescription pkg.description)
+            ]
         , div[]
             [ h4[][text "Depends:"]
             , ul[](List.map subListItem pkg.depends)
@@ -164,12 +167,20 @@ expandedPackage pkg =
             ]
         ]
 
-decodeDescription : String -> Html Msg
+decodeDescription : String -> List (Html Msg)
 decodeDescription desc =
-    div [ class "description"]
-        [ h4[][text "Description"]
-        , div[] (List.map descriptionLine (split "\n" desc))
+    h5 
+        [ style "margin-top" "0"
+        , style "margin-bottom" "0"
         ]
+        [ case List.head (split "\n" desc) of
+            Just firstLine ->
+                text firstLine
+            Nothing ->
+                text "No Description"
+        ]
+    ::
+    List.map descriptionLine (split "\n" desc)
 
 descriptionLine : String -> Html Msg
 descriptionLine line =
